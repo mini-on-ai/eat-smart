@@ -58,16 +58,23 @@ export function useUpdateItemStatus() {
   });
 }
 
+/** Soft-delete — sets status='discarded' so the item can be restored. */
 export function useDeletePantryItem() {
   const { data: householdId } = useHousehold();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("pantry_items").delete().eq("id", id);
+      const { error } = await supabase
+        .from("pantry_items")
+        .update({ status: "discarded" })
+        .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pantry", householdId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pantry", householdId] });
+      queryClient.invalidateQueries({ queryKey: ["pantry-recent", householdId] });
+    },
   });
 }
 
@@ -130,7 +137,7 @@ export function useBatchUpdateStatus() {
   });
 }
 
-/** Hard-delete N items in one call. */
+/** Soft-delete N items — sets status='discarded' so they can be restored. */
 export function useBatchDeletePantryItems() {
   const { data: householdId } = useHousehold();
   const queryClient = useQueryClient();
@@ -138,10 +145,16 @@ export function useBatchDeletePantryItems() {
   return useMutation({
     mutationFn: async (ids: string[]) => {
       if (ids.length === 0) return;
-      const { error } = await supabase.from("pantry_items").delete().in("id", ids);
+      const { error } = await supabase
+        .from("pantry_items")
+        .update({ status: "discarded" })
+        .in("id", ids);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pantry", householdId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pantry", householdId] });
+      queryClient.invalidateQueries({ queryKey: ["pantry-recent", householdId] });
+    },
   });
 }
 
@@ -167,5 +180,48 @@ export function useBatchShiftExpiry() {
       if (firstError) throw firstError;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pantry", householdId] }),
+  });
+}
+
+// ─── Recovery ─────────────────────────────────────────────────────────────
+
+/** Recently consumed + discarded items — used for the recovery screen. */
+export function useRecentItems() {
+  const { data: householdId } = useHousehold();
+
+  return useQuery({
+    queryKey: ["pantry-recent", householdId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pantry_items")
+        .select("*, item_categories(*)")
+        .eq("household_id", householdId!)
+        .in("status", ["consumed", "discarded"])
+        .order("added_at", { ascending: false })
+        .limit(60);
+      if (error) throw error;
+      return data as PantryItem[];
+    },
+    enabled: !!householdId,
+  });
+}
+
+/** Restore a consumed/discarded item back to active. */
+export function useRestoreItem() {
+  const { data: householdId } = useHousehold();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("pantry_items")
+        .update({ status: "active" })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pantry", householdId] });
+      queryClient.invalidateQueries({ queryKey: ["pantry-recent", householdId] });
+    },
   });
 }

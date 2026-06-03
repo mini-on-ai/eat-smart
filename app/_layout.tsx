@@ -6,10 +6,13 @@ import { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { vars, useColorScheme } from "nativewind";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { AuthProvider } from "@/lib/auth";
 import { queryClient, queryPersister } from "@/lib/query";
 import { supabase } from "@/lib/supabase";
+
+const SCHEME_KEY = "@eat-smart/color-scheme";
 
 import "../global.css";
 
@@ -55,8 +58,15 @@ function DeepLinkHandler() {
 }
 
 export default function RootLayout() {
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, setColorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
+
+  // Restore persisted scheme preference on first mount.
+  useEffect(() => {
+    AsyncStorage.getItem(SCHEME_KEY).then((stored) => {
+      if (stored === "dark" || stored === "light") setColorScheme(stored);
+    });
+  }, []);
   const themeVars = isDark ? DARK_VARS : LIGHT_VARS;
   const bgColor  = isDark ? "#111110" : "#FAFAF7";
 

@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Alert,
   Pressable,
@@ -10,14 +10,18 @@ import {
   Text,
   View,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useColorScheme } from "nativewind";
+import { Sun, Moon, ArchiveRestore } from "lucide-react-native";
 import { useThemeColors } from "@/lib/theme";
+
+const SCHEME_KEY = "@eat-smart/color-scheme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   CalendarPlus,
   Check,
   Plus,
   ReceiptText,
-  Search,
   Trash2,
   X,
 } from "lucide-react-native";
@@ -51,6 +55,14 @@ function buildSections(items: PantryItem[]): Section[] {
 export default function Home() {
   const router = useRouter();
   const colors = useThemeColors();
+  const { colorScheme, setColorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
+
+  const toggleScheme = useCallback(async () => {
+    const next = isDark ? "light" : "dark";
+    setColorScheme(next);
+    try { await AsyncStorage.setItem(SCHEME_KEY, next); } catch {}
+  }, [isDark, setColorScheme]);
   const { data: items, isLoading } = usePantryItems();
   const { mutate: updateStatus } = useUpdateItemStatus();
   const { mutate: deleteItem } = useDeletePantryItem();
@@ -196,11 +208,24 @@ export default function Home() {
               Garde-manger
             </Text>
           </View>
-          <Pressable
-            className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
-          >
-            <Search size={18} color={colors.ink} strokeWidth={1.75} />
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            {/* Dark / light mode toggle */}
+            <Pressable
+              onPress={toggleScheme}
+              className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
+            >
+              {isDark
+                ? <Sun  size={18} color={colors.ink} strokeWidth={1.75} />
+                : <Moon size={18} color={colors.ink} strokeWidth={1.75} />}
+            </Pressable>
+            {/* Recently consumed / deleted items */}
+            <Pressable
+              onPress={() => router.push("/(app)/recent-items")}
+              className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
+            >
+              <ArchiveRestore size={18} color={colors.ink} strokeWidth={1.75} />
+            </Pressable>
+          </View>
         </View>
       )}
 
