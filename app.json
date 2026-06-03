@@ -1,17 +1,18 @@
 {
   "expo": {
-    "name": "minion-eat-smart",
-    "slug": "minion-eat-smart",
-    "version": "1.0.0",
+    "name": "eat-smart",
+    "slug": "eat-smart",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "minioneatsmart",
+    "scheme": "eatsmart",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.kirozdormu.eatsmart",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -19,7 +20,11 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "output": "static",
@@ -33,16 +38,38 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#FAFAF7",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1A1A17"
           }
         }
-      ]
+      ],
+      "expo-secure-store",
+      "expo-notifications",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow eat-smart to scan your grocery receipts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow eat-smart to pick a receipt photo from your library."
+        }
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "62d5eeac-d429-4588-91e3-19e1dba3941d"
+      }
+    },
+    "owner": "kirozdormu"
   }
 }

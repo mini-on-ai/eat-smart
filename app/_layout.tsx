@@ -1,24 +1,51 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import * as Linking from "expo-linking";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import { useEffect } from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "react-native-reanimated";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AuthProvider } from "@/lib/auth";
+import { queryClient, queryPersister } from "@/lib/query";
+import { supabase } from "@/lib/supabase";
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+import "../global.css";
+
+function DeepLinkHandler() {
+  const url = Linking.useURL();
+
+  useEffect(() => {
+    if (!url) return;
+    // Magic link arrives as: eatsmart://?token_hash=...&type=magiclink
+    const { queryParams } = Linking.parse(url);
+    const token_hash = queryParams?.token_hash as string | undefined;
+    const type = queryParams?.type as string | undefined;
+    if (token_hash && type) {
+      supabase.auth.verifyOtp({ token_hash, type: type as any });
+    }
+  }, [url]);
+
+  return null;
+}
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{ persister: queryPersister, buster: "v2" }}
+      >
+        <AuthProvider>
+          <DeepLinkHandler />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#FAFAF7" } }}>
+            <Stack.Screen name="index" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(app)" />
+          </Stack>
+          <StatusBar style="dark" />
+        </AuthProvider>
+      </PersistQueryClientProvider>
+    </GestureHandlerRootView>
   );
 }

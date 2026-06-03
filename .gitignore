@@ -31,6 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 
 # typescript
@@ -41,3 +42,15 @@ app-example
 # generated native folders
 /ios
 /android
+
+# historical receipts downloaded from Google Drive (PII, never commit)
+/receipts/
+
+# IDE
+.idea/
+
+# Local receipt scan images (PII)
+*.jpg
+*.jpeg
+*.png
+!assets/**
