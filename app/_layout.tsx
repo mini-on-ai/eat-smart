@@ -3,22 +3,22 @@ import * as Linking from "expo-linking";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { vars, useColorScheme } from "nativewind";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { vars } from "nativewind";
 
 import { AuthProvider } from "@/lib/auth";
 import { queryClient, queryPersister } from "@/lib/query";
 import { supabase } from "@/lib/supabase";
-
-const SCHEME_KEY = "@eat-smart/color-scheme";
+import { ThemeProvider, useTheme } from "@/lib/themeContext";
 
 import "../global.css";
 
-// CSS variable values injected at the root so every descendant component that
-// references var(--color-*) tokens in its Tailwind classes resolves the right
-// colour for the current scheme.  Web uses global.css media queries instead.
+// CSS variable values injected at the root on NATIVE so every descendant
+// that references var(--color-*) tokens resolves the right colour for the
+// current scheme.  On web, global.css + the .dark class handle this instead
+// (inline style would have higher specificity and block the class from working).
 const LIGHT_VARS = vars({
   "--color-bg":          "#FAFAF7",
   "--color-card":        "#FFFFFF",
@@ -57,21 +57,16 @@ function DeepLinkHandler() {
   return null;
 }
 
-export default function RootLayout() {
-  const { colorScheme, setColorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  // Restore persisted scheme preference on first mount.
-  useEffect(() => {
-    AsyncStorage.getItem(SCHEME_KEY).then((stored) => {
-      if (stored === "dark" || stored === "light") setColorScheme(stored);
-    });
-  }, []);
-  const themeVars = isDark ? DARK_VARS : LIGHT_VARS;
-  const bgColor  = isDark ? "#111110" : "#FAFAF7";
+function AppShell() {
+  const { isDark } = useTheme();
+  // On native: inject CSS variable values via inline style so var(--color-*)
+  // tokens in Tailwind classes resolve correctly.  On web, we skip this because
+  // the inline style would win over the .dark CSS class in global.css.
+  const nativeThemeVars = Platform.OS !== "web" ? (isDark ? DARK_VARS : LIGHT_VARS) : {};
+  const bgColor = isDark ? "#111110" : "#FAFAF7";
 
   return (
-    <GestureHandlerRootView style={[{ flex: 1 }, themeVars]}>
+    <GestureHandlerRootView style={[{ flex: 1 }, nativeThemeVars]}>
       <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{ persister: queryPersister, buster: "v2" }}
@@ -87,5 +82,13 @@ export default function RootLayout() {
         </AuthProvider>
       </PersistQueryClientProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <AppShell />
+    </ThemeProvider>
   );
 }

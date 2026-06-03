@@ -1,50 +1,175 @@
-# Welcome to your Expo app 👋
+# eat-smart
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Personal food-management app — track expiry dates, scan receipts with AI, and get push notifications before food goes to waste.
 
-## Get started
+- **Android app** (primary, v1) — built with Expo / React Native
+- **Web app** — deployed to GitHub Pages, works in any browser including iPhone Safari / Chrome
 
-1. Install dependencies
+Live at: **https://mini-on-ai.github.io/eat-smart/**
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- **Pantry** — list of items grouped by urgency (expires today / soon / later)
+- **Receipt scanning** — photo or PDF, OCR'd by Claude to extract items + expiry dates automatically
+- **Push notifications** — server-side alerts at 3 days, 1 day, and the day of expiry
+- **Shopping list** — cross-off items; share as plain text
+- **Stats** — consumption history, waste rate, category breakdown
+- **Recovery screen** — restore accidentally deleted or consumed items
+- **Dark mode** — follows system preference; manual toggle in the pantry header
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Stack
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+| Layer | Tech |
+|---|---|
+| Framework | Expo SDK 54 (React Native 0.81, React 19) |
+| Routing | expo-router v6 (file-based, typed routes) |
+| Styling | NativeWind v4 (Tailwind 3) + CSS variables for dark mode |
+| Backend | Supabase (Postgres + RLS + Storage + Edge Functions + Auth) |
+| AI | Anthropic Claude (via Edge Function — key never in client) |
+| State | TanStack Query v5 (with AsyncStorage persistence) + Zustand |
+| Forms | react-hook-form + zod |
+| Icons | lucide-react-native |
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## Local development
+
+### Prerequisites
+
+- Node.js 22+
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (`npm install -g expo-cli`)
+- Android emulator or physical device with Expo Go, **or** a web browser
+
+### Setup
 
 ```bash
-npm run reset-project
+git clone https://github.com/mini-on-ai/eat-smart.git
+cd eat-smart
+npm install
+
+# Copy the environment template and fill in your Supabase project keys
+cp .env.example .env
+# Edit .env with your EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Run
 
-## Learn more
+```bash
+# Android (emulator or device)
+npx expo start --android
 
-To learn more about developing your project with Expo, look at the following resources:
+# Web browser
+npx expo start --web
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Interactive — pick platform in the terminal
+npx expo start
+```
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
+## Environment variables
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+### Client (`.env`) — shipped in the app bundle
+
+These are public and safe to be in the app bundle. They are prefixed `EXPO_PUBLIC_` so Expo bakes them in at build time.
+
+| Variable | Description |
+|---|---|
+| `EXPO_PUBLIC_SUPABASE_URL` | Your Supabase project URL |
+| `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
+
+See `.env.example` for the template.
+
+### Server-side only — NEVER put these in `.env` with `EXPO_PUBLIC_` prefix
+
+These live exclusively in Supabase Edge Function secrets (Settings → Edge Functions → Secrets):
+
+| Secret | Used by |
+|---|---|
+| `ANTHROPIC_API_KEY` | `scan-receipt` — calls Claude for receipt OCR |
+| `SUPABASE_SERVICE_ROLE_KEY` | Edge Functions (auto-injected by Supabase) |
+
+The `SUPABASE_SERVICE_ROLE_KEY` may also be in your local `.env` for running admin scripts (`scripts/`). It is gitignored and must never be committed.
+
+---
+
+## Deployment
+
+### Android APK (EAS Build)
+
+```bash
+# One-time login
+npx eas-cli login
+
+# Build a preview APK
+npx eas build --platform android --profile preview
+```
+
+### Web (GitHub Pages)
+
+Pushes to `main` trigger a GitHub Actions workflow that:
+1. Runs `expo export --platform web`
+2. Copies `dist/index.html → dist/404.html` (SPA fallback)
+3. Deploys to GitHub Pages at `https://mini-on-ai.github.io/eat-smart/`
+
+See `.github/workflows/deploy.yml`.
+
+---
+
+## Architecture notes
+
+### Auth
+
+Magic-link via `supabase.auth.signInWithOtp` — no passwords. Session persisted in AsyncStorage (native) or localStorage (web). The `AuthProvider` in `lib/auth.tsx` exposes `useAuth() → { session, loading }`. Route groups gate access: `(auth)/*` redirects to `(app)` when signed in; `(app)/*` redirects to `(auth)/sign-in` when signed out.
+
+### Dark mode
+
+Theme state is managed by `ThemeProvider` in `lib/themeContext.tsx` — a plain `useState` that guarantees re-renders on all platforms including React Native Web. On web, toggling also sets the `.dark` / `.light` class on `<html>` so Tailwind CSS variables in `global.css` update. On native, `vars()` from NativeWind injects the correct CSS variable values into the component tree.
+
+### Receipt scanning
+
+1. Client uploads image/PDF to Supabase Storage (`receipts/{household_id}/...`)
+2. Client calls the `scan-receipt` Edge Function with `{ image_path, household_id }`
+3. Function verifies the caller is a member of the household (auth + authorisation check)
+4. Function fetches the file, sends it to Claude, parses the JSON response
+5. Returns a list of items for the user to confirm or edit before saving to `pantry_items`
+
+### Data model
+
+```
+households          (multi-tenant, v1 = single household per user)
+  └── household_members (user ↔ household, with push token)
+  └── pantry_items  (name, category, quantity, unit, expires_on, status, price, purchased_at)
+  └── receipts      (image_path, llm response, confirmation status)
+  └── shopping_list_items
+item_categories     (seed data — French names matching Claude's output)
+```
+
+All tables have Row Level Security enabled. Household data is only accessible to members via the `is_member_of(household_id)` helper function.
+
+### Push notifications
+
+Server-side via pg_cron + `send-expiry-notifications` Edge Function → Expo Push API. No local scheduled notifications in the client bundle.
+
+---
+
+## Security
+
+- Anthropic API key lives only in Supabase Edge Function secrets — never in the client bundle
+- The `scan-receipt` Edge Function enforces that the caller is authenticated and is a member of the target household before processing
+- All database tables have RLS enabled; every query from the client app is scoped to the user's household
+- `SUPABASE_SERVICE_ROLE_KEY` is gitignored and never committed
+
+---
+
+## Roadmap (v2)
+
+- iOS native app build
+- Household sharing / invite flow
+- Recipe suggestions based on expiring items
+- Macro / nutrition tracking
+- Smart shopping list (learns from purchase history)

@@ -101,6 +101,32 @@ Deno.serve(async (req) => {
       return json({ error: "image_path and household_id required" }, 400);
     }
 
+    // ── Auth & authorisation ──────────────────────────────────────────────
+    // 1. Caller must be authenticated (valid JWT).
+    const callerToken = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
+    const { data: { user } } = await supabase.auth.getUser(callerToken);
+    if (!user) {
+      return json({ error: "Unauthorized: valid session required" }, 401);
+    }
+
+    // 2. Caller must be a member of the target household.
+    //    The function uses service-role (bypasses RLS), so we enforce this manually.
+    const { data: membership } = await supabase
+      .from("household_members")
+      .select("household_id")
+      .eq("household_id", household_id)
+      .eq("user_id", user.id)
+      .single();
+    if (!membership) {
+      return json({ error: "Forbidden: not a member of this household" }, 403);
+    }
+
+    // 3. image_path must be scoped to the caller's household storage folder.
+    //    Storage paths are structured as "{household_id}/{filename}".
+    if (!image_path.startsWith(`${household_id}/`)) {
+      return json({ error: "Forbidden: image_path does not belong to this household" }, 403);
+    }
+
     // Generate signed URL to read the file
     const { data: signedData, error: signedError } = await supabase.storage
       .from("receipts")
@@ -241,10 +267,6 @@ Deno.serve(async (req) => {
     const items: ParsedItem[] = Array.isArray(parsed.items) ? parsed.items : [];
     const purchasedAt: string | null = parsed.purchased_at ?? null;
     const total: number | null = typeof parsed.total === "number" ? parsed.total : null;
-
-    // Resolve the calling user (null when invoked with service-role key, e.g. test script)
-    const callerToken = req.headers.get("Authorization")?.replace("Bearer ", "") ?? "";
-    const { data: { user } } = await supabase.auth.getUser(callerToken);
 
     const totalToStore = total ?? items.reduce((s, it) => s + (typeof it.price === "number" ? it.price : 0), 0);
     const { data: receipt, error: insertErr } = await supabase.from("receipts").insert({

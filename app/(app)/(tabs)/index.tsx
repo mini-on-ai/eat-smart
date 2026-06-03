@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useRouter } from "expo-router";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import {
   Alert,
   Pressable,
@@ -10,12 +10,9 @@ import {
   Text,
   View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useColorScheme } from "nativewind";
 import { Sun, Moon, ArchiveRestore } from "lucide-react-native";
 import { useThemeColors } from "@/lib/theme";
-
-const SCHEME_KEY = "@eat-smart/color-scheme";
+import { useTheme } from "@/lib/themeContext";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   CalendarPlus,
@@ -55,14 +52,7 @@ function buildSections(items: PantryItem[]): Section[] {
 export default function Home() {
   const router = useRouter();
   const colors = useThemeColors();
-  const { colorScheme, setColorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
-
-  const toggleScheme = useCallback(async () => {
-    const next = isDark ? "light" : "dark";
-    setColorScheme(next);
-    try { await AsyncStorage.setItem(SCHEME_KEY, next); } catch {}
-  }, [isDark, setColorScheme]);
+  const { isDark, toggle: toggleScheme } = useTheme();
   const { data: items, isLoading } = usePantryItems();
   const { mutate: updateStatus } = useUpdateItemStatus();
   const { mutate: deleteItem } = useDeletePantryItem();
@@ -209,28 +199,33 @@ export default function Home() {
             </Text>
           </View>
           <View className="flex-row items-center gap-2">
-            {/* Dark / light mode toggle — pill with label so it's easy to find */}
+            {/* Dark / light mode toggle — high-contrast inverted pill */}
             <Pressable
               onPress={toggleScheme}
-              className="flex-row items-center gap-1.5 px-3 h-9 rounded-full border active:opacity-70"
+              className="flex-row items-center gap-1.5 px-3 h-10 rounded-full active:opacity-70"
               style={{
-                backgroundColor: isDark ? "#252522" : "#F1F1EC",
-                borderColor: isDark ? "#373735" : "#E6E5DF",
+                // Inverted: dark background in light mode, light background in dark mode.
+                // Always visible regardless of theme.
+                backgroundColor: isDark ? "#E8E8E4" : "#1A1A17",
               }}
             >
               {isDark
-                ? <Sun  size={14} color={colors.inkSoft} strokeWidth={2} />
-                : <Moon size={14} color={colors.inkSoft} strokeWidth={2} />}
-              <Text className="text-[12px] font-semibold" style={{ color: colors.inkSoft }}>
+                ? <Sun  size={14} color="#1A1A17" strokeWidth={2.5} />
+                : <Moon size={14} color="#FFFFFF" strokeWidth={2.5} />}
+              <Text
+                className="text-[13px] font-bold"
+                style={{ color: isDark ? "#1A1A17" : "#FFFFFF" }}
+              >
                 {isDark ? "Clair" : "Sombre"}
               </Text>
             </Pressable>
             {/* Recently consumed / deleted items */}
             <Pressable
               onPress={() => router.push("/(app)/recent-items")}
-              className="w-9 h-9 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
+              className="w-10 h-10 rounded-full items-center justify-center active:opacity-70"
+              style={{ backgroundColor: colors.muted }}
             >
-              <ArchiveRestore size={17} color={colors.inkSoft} strokeWidth={1.75} />
+              <ArchiveRestore size={18} color={colors.ink} strokeWidth={1.75} />
             </Pressable>
           </View>
         </View>

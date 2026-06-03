@@ -3,7 +3,7 @@
  * classes are not available.  For class-based usage, the tokens resolve
  * automatically via CSS variables (see global.css + tailwind.config.js).
  */
-import { useColorScheme } from "nativewind";
+import { useTheme } from "@/lib/themeContext";
 
 const COLORS = {
   light: {
@@ -29,11 +29,14 @@ const COLORS = {
     inkFaint:    "#5A5A52",
     elevated:    "#2C2C29",
   },
-} as const;
+};
 
-export type ThemeColors = typeof COLORS.light;
+export type ThemeColors = {
+  bg: string; card: string; muted: string; border: string; borderSoft: string;
+  ink: string; inkSoft: string; inkFaint: string; elevated: string;
+};
 
 export function useThemeColors(): ThemeColors {
-  const { colorScheme } = useColorScheme();
-  return colorScheme === "dark" ? COLORS.dark : COLORS.light;
+  const { isDark } = useTheme();
+  return isDark ? COLORS.dark : COLORS.light;
 }

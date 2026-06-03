@@ -1,12 +1,11 @@
 import { Tabs } from "expo-router";
 import { Home, BarChart3, ShoppingBasket } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useColorScheme } from "nativewind";
+import { useTheme } from "@/lib/themeContext";
 
 export default function TabsLayout() {
   const insets = useSafeAreaInsets();
-  const { colorScheme } = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const { isDark } = useTheme();
 
   // Pad the tab bar so buttons clear the home-indicator (iPhone) or gesture
   // navigation bar (Android).  Without a fixed height, React Navigation sizes
