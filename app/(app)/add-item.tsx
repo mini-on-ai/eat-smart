@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { useThemeColors } from "@/lib/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { addDays, format, parseISO } from "date-fns";
 import { ChevronLeft, Minus, Plus } from "lucide-react-native";
@@ -34,6 +35,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function AddItem() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { data: categories, isLoading: loadingCats } = useCategories();
   const { mutateAsync: addItem } = useAddPantryItem();
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -124,14 +126,14 @@ export default function AddItem() {
                       }}
                       className="flex-row items-center gap-1.5 rounded-full px-3.5 py-2 active:opacity-70"
                       style={{
-                        backgroundColor: selected ? "#1A1A17" : "#FFFFFF",
+                        backgroundColor: selected ? colors.elevated : colors.card,
                         borderWidth: 1,
-                        borderColor: selected ? "transparent" : "#E6E5DF",
+                        borderColor: selected ? "transparent" : colors.border,
                       }}
                     >
                       <Text
                         className="text-[13px] font-medium"
-                        style={{ color: selected ? "#FAFAF7" : "#1A1A17" }}
+                        style={{ color: selected ? "#F0F0EC" : colors.ink }}
                       >
                         {cat.name}
                       </Text>

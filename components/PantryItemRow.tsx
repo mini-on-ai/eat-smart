@@ -1,6 +1,8 @@
 import { Pressable, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import { Check } from "lucide-react-native";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 import { ItemGlyph } from "@/components/ItemGlyph";
 import { daysUntilExpiry, expiryLabel, expiryLevel } from "@/lib/expiry";
 import type { PantryItem } from "@/lib/types";
@@ -64,6 +66,11 @@ export function PantryItemRow({
     ? `×${item.quantity}`
     : null;
 
+  const purchaseDate = item.purchased_at
+    ? format(parseISO(item.purchased_at), "d MMM", { locale: fr })
+    : null;
+  const secondaryLine = [qty, purchaseDate].filter(Boolean).join("  ·  ");
+
   const inner = (
     <Pressable
       onPress={() => {
@@ -113,8 +120,8 @@ export function PantryItemRow({
           <Text className="text-[15px] font-medium text-ink leading-snug" numberOfLines={1}>
             {item.name}
           </Text>
-          {qty ? (
-            <Text className="text-xs text-ink-faint">{qty}</Text>
+          {secondaryLine ? (
+            <Text className="text-xs text-ink-faint">{secondaryLine}</Text>
           ) : null}
         </View>
 

@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useThemeColors } from "@/lib/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
   CalendarPlus,
@@ -49,6 +50,7 @@ function buildSections(items: PantryItem[]): Section[] {
 
 export default function Home() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { data: items, isLoading } = usePantryItems();
   const { mutate: updateStatus } = useUpdateItemStatus();
   const { mutate: deleteItem } = useDeletePantryItem();
@@ -138,7 +140,7 @@ export default function Home() {
       {selectionMode ? (
         <View
           className="px-3 pt-2 pb-3 flex-row items-center justify-between"
-          style={{ backgroundColor: "#1A1A17" }}
+          style={{ backgroundColor: colors.elevated }}
         >
           <View className="flex-row items-center gap-3">
             <Pressable
@@ -197,7 +199,7 @@ export default function Home() {
           <Pressable
             className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
           >
-            <Search size={18} color="#1A1A17" strokeWidth={1.75} />
+            <Search size={18} color={colors.ink} strokeWidth={1.75} />
           </Pressable>
         </View>
       )}
@@ -285,7 +287,7 @@ export default function Home() {
               shadowOffset: { width: 0, height: 2 },
             }}
           >
-            <ReceiptText size={18} color="#1A1A17" strokeWidth={1.75} />
+            <ReceiptText size={18} color={colors.ink} strokeWidth={1.75} />
             <Text className="text-sm font-semibold text-ink">Scanner un ticket</Text>
           </Pressable>
           <Pressable

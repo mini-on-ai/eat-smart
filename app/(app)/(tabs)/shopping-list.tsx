@@ -8,6 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { useThemeColors } from "@/lib/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Check, Share2, UserPlus, X } from "lucide-react-native";
 
@@ -36,6 +37,7 @@ type UnifiedItem = {
 };
 
 export default function ShoppingListScreen() {
+  const colors = useThemeColors();
   const { data: history, isLoading: hLoading } = useConsumedHistory();
   const { data: active } = usePantryItems();
   const { data: categories } = useCategories();
@@ -165,7 +167,7 @@ export default function ShoppingListScreen() {
           <Pressable
             onPress={share}
             className="w-10 h-10 rounded-full items-center justify-center"
-            style={{ backgroundColor: "#1A1A17" }}
+            style={{ backgroundColor: colors.elevated }}
           >
             <Share2 size={18} color="#FAFAF7" strokeWidth={1.75} />
           </Pressable>
@@ -201,7 +203,7 @@ export default function ShoppingListScreen() {
                       className="flex-row items-center px-3 py-3"
                       style={{
                         borderBottomWidth: idx === items.length - 1 ? 0 : 1,
-                        borderBottomColor: "#F0EFEA",
+                        borderBottomColor: colors.borderSoft,
                       }}
                     >
                       <View
@@ -248,12 +250,12 @@ export default function ShoppingListScreen() {
                           onPress={() => removeManual(s.manualId!)}
                           hitSlop={6}
                           className="ml-2 w-7 h-7 rounded-full items-center justify-center"
-                          style={{ backgroundColor: "#F4F1EA" }}
+                          style={{ backgroundColor: colors.muted }}
                         >
                           <X size={13} color="#9A9A91" strokeWidth={1.75} />
                         </Pressable>
                       ) : (
-                        <View className="ml-2 px-2 py-1 rounded-md" style={{ backgroundColor: "#F4F1EA" }}>
+                        <View className="ml-2 px-2 py-1 rounded-md" style={{ backgroundColor: colors.muted }}>
                           <Text className="text-[10px] font-semibold text-ink-soft uppercase tracking-wider">
                             {s.purchaseCount}×
                           </Text>

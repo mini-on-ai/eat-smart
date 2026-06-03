@@ -36,6 +36,7 @@ import {
   useDeletePantryItem,
 } from "@/lib/hooks/usePantryItems";
 import { useAddToShoppingList } from "@/lib/hooks/useShoppingList";
+import { useThemeColors } from "@/lib/theme";
 import type { ItemCategory } from "@/lib/types";
 
 const NUTRISCORE_COLORS: Record<string, string> = {
@@ -48,6 +49,7 @@ const NUTRISCORE_COLORS: Record<string, string> = {
 
 export default function PantryItemDetail() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: item, isLoading } = usePantryItem(id);
   const { data: categories } = useCategories();
@@ -178,7 +180,7 @@ export default function PantryItemDetail() {
           onPress={() => router.back()}
           className="w-10 h-10 rounded-full items-center justify-center active:opacity-60"
         >
-          <ChevronLeft size={24} color="#1A1A17" strokeWidth={1.75} />
+          <ChevronLeft size={24} color={colors.ink} strokeWidth={1.75} />
         </Pressable>
         <Text className="text-[17px] font-semibold text-ink">Article</Text>
         <Pressable
@@ -251,11 +253,11 @@ export default function PantryItemDetail() {
                   onPress={() => setCategory(c)}
                   className="px-3 py-1.5 rounded-full border"
                   style={{
-                    backgroundColor: active ? "#3F8F5C" : "#fff",
-                    borderColor: active ? "#3F8F5C" : "#E6E5DF",
+                    backgroundColor: active ? "#3F8F5C" : colors.card,
+                    borderColor: active ? "#3F8F5C" : colors.border,
                   }}
                 >
-                  <Text style={{ color: active ? "#fff" : "#1A1A17", fontSize: 12 }}>
+                  <Text style={{ color: active ? "#fff" : colors.ink, fontSize: 12 }}>
                     {c.name}
                   </Text>
                 </Pressable>
@@ -274,7 +276,7 @@ export default function PantryItemDetail() {
               onPress={() => adjustQuantity(-1)}
               className="w-12 h-12 rounded-full bg-bg border border-border items-center justify-center active:opacity-70"
             >
-              <Minus size={20} color="#1A1A17" strokeWidth={2} />
+              <Minus size={20} color={colors.ink} strokeWidth={2} />
             </Pressable>
             <View className="items-center">
               <Text className="text-[30px] font-semibold text-ink" style={{ letterSpacing: -0.5 }}>
@@ -295,7 +297,7 @@ export default function PantryItemDetail() {
               onPress={() => adjustQuantity(+1)}
               className="w-12 h-12 rounded-full bg-bg border border-border items-center justify-center active:opacity-70"
             >
-              <Plus size={20} color="#1A1A17" strokeWidth={2} />
+              <Plus size={20} color={colors.ink} strokeWidth={2} />
             </Pressable>
           </View>
           {/* Consumption bar */}
@@ -314,7 +316,7 @@ export default function PantryItemDetail() {
           {/* "I used Xg" row — only shown when unit is a weight/volume */}
           {packWeight && (
             <View className="flex-row items-center gap-2 mt-3 pt-3"
-              style={{ borderTopWidth: 1, borderTopColor: "#F0EFEA" }}>
+              style={{ borderTopWidth: 1, borderTopColor: colors.borderSoft }}>
               <TextInput
                 ref={usedInputRef}
                 value={usedInput}
@@ -327,8 +329,8 @@ export default function PantryItemDetail() {
                 style={{
                   flex: 1,
                   fontSize: 13,
-                  color: "#1A1A17",
-                  backgroundColor: "#F4F1EA",
+                  color: colors.ink,
+                  backgroundColor: colors.muted,
                   borderRadius: 10,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
@@ -337,7 +339,7 @@ export default function PantryItemDetail() {
               <Pressable
                 onPress={commitUsedWeight}
                 className="px-3 py-2 rounded-xl items-center justify-center"
-                style={{ backgroundColor: "#1A1A17" }}
+                style={{ backgroundColor: colors.elevated }}
               >
                 <Text className="text-[12px] font-semibold text-white">Retirer</Text>
               </Pressable>
@@ -426,7 +428,7 @@ export default function PantryItemDetail() {
               multiline
               placeholder="Ajouter une note…"
               placeholderTextColor="#9A9A91"
-              style={{ fontSize: 14, color: "#1A1A17", minHeight: 44 }}
+              style={{ fontSize: 14, color: colors.ink, minHeight: 44 }}
             />
           ) : (
             <Pressable onPress={() => setEditingNote(true)}>
@@ -529,7 +531,7 @@ export default function PantryItemDetail() {
             }}
             className="flex-1 rounded-2xl py-3.5 items-center bg-card border border-border active:opacity-70 flex-row justify-center gap-2"
           >
-            <ShoppingBasket size={18} color="#1A1A17" strokeWidth={1.75} />
+            <ShoppingBasket size={18} color={colors.ink} strokeWidth={1.75} />
             <Text className="text-[14px] font-semibold text-ink">Liste de courses</Text>
           </Pressable>
           <Pressable

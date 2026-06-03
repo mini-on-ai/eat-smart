@@ -5,21 +5,25 @@ module.exports = {
     "./components/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
+  darkMode: "media",
   theme: {
     extend: {
       colors: {
-        // Surface / background
-        bg: "#FAFAF7",
-        card: "#FFFFFF",
-        muted: "#F1F1EC",
-        border: "#E6E5DF",
+        // Surface / background — resolved from CSS variables so dark mode
+        // works automatically on both web (via media query) and native
+        // (via vars() injection in _layout.tsx).
+        bg:          "var(--color-bg)",
+        card:        "var(--color-card)",
+        muted:       "var(--color-muted)",
+        border:      "var(--color-border)",
+        borderSoft:  "var(--color-border-soft)",
 
         // Text
-        ink: "#1A1A17",
-        "ink-soft": "#5B5B53",
-        "ink-faint": "#9A9A91",
+        ink:         "var(--color-ink)",
+        "ink-soft":  "var(--color-ink-soft)",
+        "ink-faint": "var(--color-ink-faint)",
 
-        // Brand — warm green for fresh/food
+        // Brand — warm green for fresh/food (unchanged across modes)
         brand: {
           DEFAULT: "#3F8F5C",
           soft: "#E8F2EB",
@@ -27,13 +31,12 @@ module.exports = {
           dark: "#327049",
         },
 
-        // Expiry urgency
-        fresh: "#3F8F5C",       // > 7 days
-        soon: "#D9A441",        // 1-3 days
-        urgent: "#C8553D",      // today / expired
+        // Expiry urgency (semantic — unchanged across modes)
+        fresh:      "#3F8F5C",
+        soon:       "#D9A441",
+        urgent:     "#C8553D",
         urgentTint: "#FBE9E5",
         soonTint:   "#FAEFD8",
-        borderSoft: "#EFEEE9",
       },
       fontFamily: {
         sans: ["System"],
