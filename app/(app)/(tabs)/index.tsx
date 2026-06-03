@@ -209,21 +209,28 @@ export default function Home() {
             </Text>
           </View>
           <View className="flex-row items-center gap-2">
-            {/* Dark / light mode toggle */}
+            {/* Dark / light mode toggle — pill with label so it's easy to find */}
             <Pressable
               onPress={toggleScheme}
-              className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
+              className="flex-row items-center gap-1.5 px-3 h-9 rounded-full border active:opacity-70"
+              style={{
+                backgroundColor: isDark ? "#252522" : "#F1F1EC",
+                borderColor: isDark ? "#373735" : "#E6E5DF",
+              }}
             >
               {isDark
-                ? <Sun  size={18} color={colors.ink} strokeWidth={1.75} />
-                : <Moon size={18} color={colors.ink} strokeWidth={1.75} />}
+                ? <Sun  size={14} color={colors.inkSoft} strokeWidth={2} />
+                : <Moon size={14} color={colors.inkSoft} strokeWidth={2} />}
+              <Text className="text-[12px] font-semibold" style={{ color: colors.inkSoft }}>
+                {isDark ? "Clair" : "Sombre"}
+              </Text>
             </Pressable>
             {/* Recently consumed / deleted items */}
             <Pressable
               onPress={() => router.push("/(app)/recent-items")}
-              className="w-10 h-10 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
+              className="w-9 h-9 rounded-full bg-card border border-border items-center justify-center active:opacity-70"
             >
-              <ArchiveRestore size={18} color={colors.ink} strokeWidth={1.75} />
+              <ArchiveRestore size={17} color={colors.inkSoft} strokeWidth={1.75} />
             </Pressable>
           </View>
         </View>

@@ -16,6 +16,8 @@
   }
 
   /* ─── Dark mode overrides ─────────────────────────────────────────────── */
+  /* @media acts as a pre-JS / no-JS fallback so the page doesn't flash      */
+  /* light on first load for users whose system is in dark mode.             */
   @media (prefers-color-scheme: dark) {
     :root {
       --color-bg:          #111110;
@@ -27,5 +29,28 @@
       --color-ink-soft:    #9A9A91;
       --color-ink-faint:   #5A5A52;
     }
+  }
+  /* .dark class is toggled by NativeWind's setColorScheme() on web.          */
+  /* Having it AFTER the @media rule means explicit user choice always wins.  */
+  .dark {
+    --color-bg:          #111110;
+    --color-card:        #1C1C19;
+    --color-muted:       #252522;
+    --color-border:      #373735;
+    --color-border-soft: #2D2D2A;
+    --color-ink:         #F0F0EC;
+    --color-ink-soft:    #9A9A91;
+    --color-ink-faint:   #5A5A52;
+  }
+  /* .light lets the user override a system-dark preference back to light.   */
+  .light {
+    --color-bg:          #FAFAF7;
+    --color-card:        #FFFFFF;
+    --color-muted:       #F1F1EC;
+    --color-border:      #E6E5DF;
+    --color-border-soft: #EFEEE9;
+    --color-ink:         #1A1A17;
+    --color-ink-soft:    #5B5B53;
+    --color-ink-faint:   #9A9A91;
   }
 }
